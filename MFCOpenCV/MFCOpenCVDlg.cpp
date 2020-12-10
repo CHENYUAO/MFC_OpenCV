@@ -66,6 +66,10 @@ BEGIN_MESSAGE_MAP(CMFCOpenCVDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &CMFCOpenCVDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, &CMFCOpenCVDlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDOK, &CMFCOpenCVDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDR_MAINFRAME, &CMFCOpenCVDlg::OnBnClickedMainframe)
+	ON_BN_CLICKED(IDCANCEL, &CMFCOpenCVDlg::OnBnClickedCancel)
 END_MESSAGE_MAP()
 
 
@@ -155,10 +159,9 @@ HCURSOR CMFCOpenCVDlg::OnQueryDragIcon()
 }
 
 
-
+//打开文件
 void CMFCOpenCVDlg::OnBnClickedButton1()
 {
-	// TODO: 在此添加控件通知处理程序代码
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ALLOWMULTISELECT,
 		NULL, this);   //选择文件对话框
 	if (dlg.DoModal() == IDOK)
@@ -166,28 +169,75 @@ void CMFCOpenCVDlg::OnBnClickedButton1()
 		CString picPath = dlg.GetPathName();   //获取图片路径
 		std::string spicPath = picPath.GetBuffer(0); //将CString类型转为string
 		image = cv::imread(spicPath);
-
-		CRect pect;
-		CWnd* pWnd = GetDlgItem(IDC_STATIC);  //IDC_STATIC为picture控件ID
-		pWnd->GetClientRect(&pect);
-		int x = pect.Width();    //返回宽
-		int y = pect.Height();   //返回高
-
-		double proportion = image.cols / image.rows;
-		cv::namedWindow("Image", CV_WINDOW_NORMAL);
-		if (proportion < 1.0) {
-			cv::resizeWindow("Image", y * image.cols / image.rows, y); //根据piccontrol的大下设置opencv窗口的大小
-		}
-		else {
-			cv::resizeWindow("Image", x, image.rows * x / image.cols); //根据piccontrol的大下设置opencv窗口的大小
-		}
-
-		HWND hWnd = (HWND)cvGetWindowHandle("Image");//嵌套opencv窗口
-		HWND hParent = ::GetParent(hWnd);
-		::SetParent(hWnd, GetDlgItem(IDC_STATIC)->m_hWnd);
-		::ShowWindow(hParent, SW_HIDE);
-
-		cv::imshow("Image", image);  //显示图像
+		showPic(image);
 	}
-	
+}
+
+//锐化
+void CMFCOpenCVDlg::OnBnClickedButton2()
+{
+	cv::Mat result;
+	cv::Mat kernel(3, 3, CV_32F, cv::Scalar(0));
+	kernel.at<float>(1, 1) = 5.0;
+	kernel.at<float>(0, 1) = -1.0;
+	kernel.at<float>(2, 1) = -1.0;
+	kernel.at<float>(1, 0) = -1.0;
+	kernel.at<float>(1, 2) = -1.0;
+	cv::filter2D(image, result, image.depth(), kernel);
+	image.release();
+	showPic(result);
+
+}
+
+//显示图片
+void CMFCOpenCVDlg::showPic(cv::Mat& image) const {
+	if (cv::getWindowProperty("Image", 0 ) != -1) {
+		cv::destroyAllWindows();
+	}
+		
+	CRect pect;
+	CWnd* pWnd = GetDlgItem(IDC_STATIC);  //IDC_STATIC为picture控件ID
+	pWnd->GetClientRect(&pect);
+	int x = pect.Width();    //返回宽
+	int y = pect.Height();   //返回高
+
+	double proportion = image.cols / image.rows;
+	cv::namedWindow("Image", CV_WINDOW_NORMAL);
+	if (proportion < 1.0) {
+		cv::resizeWindow("Image", y * image.cols / image.rows, y); //根据piccontrol的大下设置opencv窗口的大小
+	}
+	else {
+		cv::resizeWindow("Image", x, image.rows * x / image.cols); //根据piccontrol的大下设置opencv窗口的大小
+	}
+
+	HWND hWnd = (HWND)cvGetWindowHandle("Image");//嵌套opencv窗口
+	HWND hParent = ::GetParent(hWnd);
+	::SetParent(hWnd, GetDlgItem(IDC_STATIC)->m_hWnd);
+	::ShowWindow(hParent, SW_HIDE);
+
+	cv::imshow("Image", image);  //显示图像}
+}
+
+
+void CMFCOpenCVDlg::OnBnClickedOk()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CDialogEx::OnOK();
+}
+
+//关闭图片
+void CMFCOpenCVDlg::OnBnClickedMainframe()
+{
+	if (cv::getWindowProperty("Image", 0) != -1) {
+		cv::destroyAllWindows();
+		CWnd* pWnd = GetDlgItem(IDC_STATIC);
+		pWnd->ShowWindow(FALSE);
+		pWnd->ShowWindow(TRUE);
+	}
+}
+
+
+void CMFCOpenCVDlg::OnBnClickedCancel()
+{
+	CDialogEx::OnCancel();
 }
