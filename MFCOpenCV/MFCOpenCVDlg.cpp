@@ -70,6 +70,7 @@ BEGIN_MESSAGE_MAP(CMFCOpenCVDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CMFCOpenCVDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDR_MAINFRAME, &CMFCOpenCVDlg::OnBnClickedMainframe)
 	ON_BN_CLICKED(IDCANCEL, &CMFCOpenCVDlg::OnBnClickedCancel)
+	ON_BN_CLICKED(IDC_BUTTON3, &CMFCOpenCVDlg::OnBnClickedButton3)
 END_MESSAGE_MAP()
 
 
@@ -170,6 +171,8 @@ void CMFCOpenCVDlg::OnBnClickedButton1()
 		std::string spicPath = picPath.GetBuffer(0); //将CString类型转为string
 		image = cv::imread(spicPath);
 		showPic(image);
+		showHis(image);
+
 	}
 }
 
@@ -177,46 +180,14 @@ void CMFCOpenCVDlg::OnBnClickedButton1()
 void CMFCOpenCVDlg::OnBnClickedButton2()
 {
 	cv::Mat result;
-	cv::Mat kernel(3, 3, CV_32F, cv::Scalar(0));
-	kernel.at<float>(1, 1) = 5.0;
-	kernel.at<float>(0, 1) = -1.0;
-	kernel.at<float>(2, 1) = -1.0;
-	kernel.at<float>(1, 0) = -1.0;
-	kernel.at<float>(1, 2) = -1.0;
-	cv::filter2D(image, result, image.depth(), kernel);
-	image.release();
-	showPic(result);
-
+	sharpen(image, result);
+	image = result.clone();
+	result.release();
+	showPic(image);
+	showHis(image);
 }
 
-//显示图片
-void CMFCOpenCVDlg::showPic(cv::Mat& image) const {
-	if (cv::getWindowProperty("Image", 0 ) != -1) {
-		cv::destroyAllWindows();
-	}
-		
-	CRect pect;
-	CWnd* pWnd = GetDlgItem(IDC_STATIC);  //IDC_STATIC为picture控件ID
-	pWnd->GetClientRect(&pect);
-	int x = pect.Width();    //返回宽
-	int y = pect.Height();   //返回高
 
-	double proportion = image.cols / image.rows;
-	cv::namedWindow("Image", CV_WINDOW_NORMAL);
-	if (proportion < 1.0) {
-		cv::resizeWindow("Image", y * image.cols / image.rows, y); //根据piccontrol的大下设置opencv窗口的大小
-	}
-	else {
-		cv::resizeWindow("Image", x, image.rows * x / image.cols); //根据piccontrol的大下设置opencv窗口的大小
-	}
-
-	HWND hWnd = (HWND)cvGetWindowHandle("Image");//嵌套opencv窗口
-	HWND hParent = ::GetParent(hWnd);
-	::SetParent(hWnd, GetDlgItem(IDC_STATIC)->m_hWnd);
-	::ShowWindow(hParent, SW_HIDE);
-
-	cv::imshow("Image", image);  //显示图像}
-}
 
 
 void CMFCOpenCVDlg::OnBnClickedOk()
@@ -236,8 +207,68 @@ void CMFCOpenCVDlg::OnBnClickedMainframe()
 	}
 }
 
+void CMFCOpenCVDlg::OnBnClickedButton3()
+{
+	cv::Mat result;
+	canny(image,result);
+	image = result.clone();
+	result.release();
+	showPic(image);
+}
+
 
 void CMFCOpenCVDlg::OnBnClickedCancel()
 {
 	CDialogEx::OnCancel();
 }
+
+
+//显示图片
+void CMFCOpenCVDlg::showPic(cv::Mat& myImage) const {
+	if (cv::getWindowProperty("Image", 0) != -1) {
+		cv::destroyAllWindows();
+		CWnd* pWnd = GetDlgItem(IDC_STATIC);
+		pWnd->ShowWindow(FALSE);
+		pWnd->ShowWindow(TRUE);
+	}
+
+	CRect pect;
+	CWnd* pWnd = GetDlgItem(IDC_STATIC);  //IDC_STATIC为picture控件ID
+	pWnd->GetClientRect(&pect);
+	int x = pect.Width();    //返回宽
+	int y = pect.Height();   //返回高
+
+	double proportion = myImage.cols / myImage.rows;
+	cv::namedWindow("Image", CV_WINDOW_NORMAL);
+	if (proportion < 1.0) {
+		cv::resizeWindow("Image", y * myImage.cols / myImage.rows, y); //根据piccontrol的大下设置opencv窗口的大小
+	}
+	else {
+		cv::resizeWindow("Image", x, myImage.rows * x / myImage.cols); //根据piccontrol的大下设置opencv窗口的大小
+	}
+
+	HWND hWnd = (HWND)cvGetWindowHandle("Image");//嵌套opencv窗口
+	HWND hParent = ::GetParent(hWnd);
+	::SetParent(hWnd, GetDlgItem(IDC_STATIC)->m_hWnd);
+	::ShowWindow(hParent, SW_HIDE);
+
+	cv::imshow("Image", myImage);  //显示图像}
+}
+
+void CMFCOpenCVDlg::showHis(cv::Mat& myImage) const {
+	Histogram1D h;
+	cv::namedWindow("Histogram", 0);
+	CRect pect;
+	CWnd* pWnd = GetDlgItem(IDC_STATIC2);  //IDC_STATIC为picture控件ID
+	pWnd->GetClientRect(&pect);
+	int x = pect.Width();    //返回宽
+	int y = pect.Height();   //返回高
+	cv::resizeWindow("Histogram", x, y);
+	HWND hWnd = (HWND)cvGetWindowHandle("Histogram");//嵌套opencv窗口
+	HWND hParent = ::GetParent(hWnd);
+	::SetParent(hWnd, GetDlgItem(IDC_STATIC2)->m_hWnd);
+	::ShowWindow(hParent, SW_HIDE);
+
+	cv::imshow("Histogram", h.getHistogramImage(myImage));  //显示图像}
+}
+

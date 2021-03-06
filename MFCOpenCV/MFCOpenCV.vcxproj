@@ -189,6 +189,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="MFCOpenCV.h" />
     <ClInclude Include="MFCOpenCVDlg.h" />
+    <ClInclude Include="opencv.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -196,6 +197,7 @@
   <ItemGroup>
     <ClCompile Include="MFCOpenCV.cpp" />
     <ClCompile Include="MFCOpenCVDlg.cpp" />
+    <ClCompile Include="opencv.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

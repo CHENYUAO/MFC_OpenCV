@@ -8,6 +8,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
 #include <string>
+#include "opencv.h"
 
 // CMFCOpenCVDlg 对话框
 class CMFCOpenCVDlg : public CDialogEx
@@ -45,5 +46,7 @@ public:
 public:
 	cv::Mat image;
 	void showPic(cv::Mat& image) const;
+	void showHis(cv::Mat& image) const;
 
+	afx_msg void OnBnClickedButton3();
 };
